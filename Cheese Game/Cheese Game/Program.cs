@@ -19,8 +19,8 @@ namespace Cheese_Game
     class Point
     {
         //create enumeration
-        public enum PointStatus { Empty = 1, Cheese, Mouse, Cat}
-
+        public enum PointStatus { Empty = 1, Cheese, Mouse, Cat, StuckCat}
+        public int CatLives { get; set; }
         //call properties
         public int X { get; set; }
         public int Y { get; set; }
@@ -32,6 +32,7 @@ namespace Cheese_Game
             this.X = x;
             this.Y = y;
             this.Status = PointStatus.Empty;
+            this.CatLives = 0;
         }
     }
 
@@ -44,6 +45,7 @@ namespace Cheese_Game
         public Point Cheese { get; set; }
         public int Round { get; set; }
         public Random rng { get; set; }
+        
 
         public List<Point> ListOfCats { get; set; }
         //create constructor
@@ -51,6 +53,8 @@ namespace Cheese_Game
         {
             this.rng = new Random();
             this.Cat = new Point(0, 0);
+            
+            
 
             this.ListOfCats = new List<Point>();
             
@@ -100,11 +104,18 @@ namespace Cheese_Game
         public void DrawGrid()
         {
             Console.Clear();
-
+            Console.Write("| |");
+            for (int j = 0; j < 10; j++)
+            {
+                Console.Write("|" + j + "|");
+            }
+            Console.WriteLine();
             for (int y = 0; y < 10; y++)
             {
+                Console.Write("|" + y + "|");
                 for (int x = 0; x < 10; x++)
                 {
+                    
                     Point newPoint = Grid[x, y];
                     if (newPoint.Status == Point.PointStatus.Empty)
                     {
@@ -128,6 +139,7 @@ namespace Cheese_Game
                     }
                 }
                 Console.WriteLine();
+                
             }
         }
 
@@ -191,60 +203,120 @@ namespace Cheese_Game
                 if (this.Cat.Status == Point.PointStatus.Empty)
                 {
                     this.Cat.Status = Point.PointStatus.Cat;
+                    Grid[this.Cat.X, this.Cat.Y] = this.Cat;
                     break;
                 }
             }
+            ListOfCats.Add(this.Cat);
         }
         public void MoveCat()
         {
-
-
-            if (ListOfCats.Count() > 0)
+            foreach (Point catInList in ListOfCats)
             {
-                int XRelative = this.Mouse.X - this.Cat.X;
-                int YRelative = this.Mouse.Y - this.Cat.Y;
 
-                int catX = this.Cat.X; int catY = this.Cat.Y;
-                int mouseX = this.Mouse.X; int mouseY = this.Mouse.Y;
-                Point CatTarget = new Point(catX, catY);
+                if (ListOfCats.Count() > 0)
+                {
+                    int XRelative = this.Mouse.X - catInList.X;
+                    int YRelative = this.Mouse.Y - catInList.Y;
+                    Point blankPoint = new Point(0, 0);
+                    blankPoint.Status = Point.PointStatus.Empty;
 
-                //minus on x means cat is to the right
-                //minus on y cat on bottom
+                    int catX = catInList.X;
+                    int catY = catInList.Y;
+                    int mouseX = this.Mouse.X;
+                    int mouseY = this.Mouse.Y;
+                    Point CatTarget = new Point(catX, catY);
 
-                bool tryUp = YRelative < 0;
-                bool tryDown = YRelative > 0;
-                bool tryRight = XRelative < 0;
-                bool tryLeft = XRelative > 0;
+                    //minus on x means cat is to the right
+                    //minus on y cat on bottom
 
-                if (tryUp)
-                {
-                    CatTarget.Y -= 1;
+                    bool tryUp = YRelative < 0;
+                    bool tryDown = YRelative > 0;
+                    bool tryRight = XRelative > 0;
+                    bool tryLeft = XRelative < 0;
+
+
+
+                    if (tryUp)
+                    {
+                        CatTarget.Y -= 1;
+
+                    }
+                    if (tryDown)
+                    {
+                        CatTarget.Y += 1;
+
+                    }
+                    if (tryRight)
+                    {
+                        CatTarget.X += 1;
+
+                    }
+                    if (tryLeft)
+                    {
+                        CatTarget.X -= 1;
+
+                    }
+                    
+                    Point Target = Grid[CatTarget.X, CatTarget.Y];
+                    if (Target.Status == Point.PointStatus.Empty)
+                    {
+                        //means the spot going into is empty
+                        blankPoint.Status = Point.PointStatus.Empty;
+                        blankPoint.X = catX; blankPoint.Y = catY;
+                        Grid[catX, catY].Status = Point.PointStatus.Empty;
+                        this.Cat.Status = Point.PointStatus.Cat;
+                        this.Cat.X = Target.X; this.Cat.Y = Target.Y;
+                        Grid[Target.X, Target.Y].Status = Point.PointStatus.Cat;
+
+
+
+
+
+
+
+
+
+                        //this.Cat.Status = Point.PointStatus.Empty;
+                        //blankPoint.X = catX; blankPoint.Y = catY;
+                        //Grid[catX, catY] = blankPoint;
+                        //blankPoint.Status = Point.PointStatus.Empty;
+                        //this.Cat = Grid[CatTarget.X, CatTarget.Y];
+                        //this.Cat.Status = Point.PointStatus.Cat;
+                        //CatTarget.Status = Point.PointStatus.Empty;
+                    }
+                    else if (Target.Status == Point.PointStatus.Mouse)
+                    {
+                        Console.WriteLine("Mouse");
+                        Console.ReadKey();
+                    }
+                    else if (Target.Status == Point.PointStatus.Cheese)
+                    {
+
+                        Grid[catX, catY] = blankPoint;
+                        Grid[Target.X, Target.Y] = this.Cat;
+                        //this.Cat.Status = Point.PointStatus.Empty;
+                        //blankPoint.X = catX; blankPoint.Y = catY;
+                        //Grid[catX, catY] = blankPoint;
+                        //blankPoint.Status = Point.PointStatus.Empty;
+                        //this.Cat = Grid[CatTarget.X, CatTarget.Y];
+                        //this.Cat.Status = Point.PointStatus.Cat;
+                        //CatTarget.Status = Point.PointStatus.Empty;
+                    }
+                    else
+                    {
+                        
+                        foreach (Point item in Grid)
+                        {
+                            if (item.Status == Point.PointStatus.Cat)
+                            {
+                                Console.WriteLine("X: {0} Y: {1}", item.X, item.Y);
+                            }
+                        }
+                        Console.ReadKey();
+                    }
                 }
-                if (tryDown)
-                {
-                    CatTarget.Y += 1;
-                }
-                if (tryRight)
-                {
-                    CatTarget.X += 1;
-                }
-                if (tryLeft)
-                {
-                    CatTarget.X -= 1;
-                }
-                else
-                {
-                    Console.WriteLine("error");
-                }
-                if (CatTarget.Status == Point.PointStatus.Empty)
-                {
-                    //means the spot going into is empty
-                    this.Cat.Status = Point.PointStatus.Empty;
-                    //this.Cat.X = CatTarget.X;
-                    //this.Cat.Y = CatTarget.Y;
-                    this.Cat = Grid[CatTarget.X, CatTarget.Y];
-                    this.Cat.Status = Point.PointStatus.Cat;
-                } 
+
             }
 
         }
@@ -384,14 +456,20 @@ namespace Cheese_Game
                         if (FutureMousePoint.Y == cheesePlace.Y)
                         {
                             CurrentMousePoint.Status = Point.PointStatus.Empty;
+                            CurrentMousePoint = Grid[CurrentMousePoint.X, CurrentMousePoint.Y];
                             FutureMousePoint.Status = Point.PointStatus.Mouse;
+                            FutureMousePoint = Grid[FutureMousePoint.X, FutureMousePoint.Y];
+                            this.Mouse = FutureMousePoint;
                             return true;
                         }
                     }
                 }
                 //if it is not the cheese
                 CurrentMousePoint.Status = Point.PointStatus.Empty;
+                CurrentMousePoint = Grid[CurrentMousePoint.X, CurrentMousePoint.Y];
                 FutureMousePoint.Status = Point.PointStatus.Mouse;
+                FutureMousePoint = Grid[FutureMousePoint.X, FutureMousePoint.Y];
+                this.Mouse = FutureMousePoint;
             }
             return false;
         }
@@ -400,16 +478,21 @@ namespace Cheese_Game
             bool foundCheese = false;
             int numOfMoves = 0;
             int numOfCheesesFound = 0;
-            bool testingCat = true;
+            int cheeseCounterToAddCat = 0;
+            //bool testingCat = true;
             while (!foundCheese)       //if the cheese has not been found
             {
-                this.MoveCat();
+                if (numOfCheesesFound != 2)
+                {
+                    this.MoveCat(); 
+                }
                 this.DrawGrid();
                 Console.WriteLine("Number of moves taken so far: " + numOfMoves + "\nYou have found " + numOfCheesesFound + " peices of cheese!");
                 int userMove = this.GetUserMove();
                 if (this.MoveMouse(this.ValidMove(userMove), userMove))
                 {
                     numOfCheesesFound++;
+                    cheeseCounterToAddCat++;
                 }
                 numOfMoves++;
                 if (numOfMoves % 6 == 0)
@@ -426,10 +509,11 @@ namespace Cheese_Game
                     }
                 }
                 
-                if (testingCat)
+                if (cheeseCounterToAddCat == 2)
                 {
                     this.PlaceCat();
-                    testingCat = false;
+
+                    cheeseCounterToAddCat = 0;
                 }
                 //found how many pieces of cheese are on the board if it is zero then the player will win
                 int numOfCheeseOnBoard = 0;
