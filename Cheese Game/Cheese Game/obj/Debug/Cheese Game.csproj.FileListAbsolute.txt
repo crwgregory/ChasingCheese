@@ -4,3 +4,9 @@ C:\Users\Technologist SP\Documents\GitHub\ChasingCheese\Cheese Game\Cheese Game\
 C:\Users\Technologist SP\Documents\GitHub\ChasingCheese\Cheese Game\Cheese Game\obj\Debug\Cheese Game.csprojResolveAssemblyReference.cache
 C:\Users\Technologist SP\Documents\GitHub\ChasingCheese\Cheese Game\Cheese Game\obj\Debug\Cheese Game.exe
 C:\Users\Technologist SP\Documents\GitHub\ChasingCheese\Cheese Game\Cheese Game\obj\Debug\Cheese Game.pdb
+C:\Users\Greg Christopherson\Documents\GitHub\ChasingCheese\Cheese Game\Cheese Game\bin\Debug\Cheese Game.exe.config
+C:\Users\Greg Christopherson\Documents\GitHub\ChasingCheese\Cheese Game\Cheese Game\obj\Debug\Cheese Game.exe
+C:\Users\Greg Christopherson\Documents\GitHub\ChasingCheese\Cheese Game\Cheese Game\obj\Debug\Cheese Game.pdb
+C:\Users\Greg Christopherson\Documents\GitHub\ChasingCheese\Cheese Game\Cheese Game\bin\Debug\Cheese Game.exe
+C:\Users\Greg Christopherson\Documents\GitHub\ChasingCheese\Cheese Game\Cheese Game\bin\Debug\Cheese Game.pdb
+C:\Users\Greg Christopherson\Documents\GitHub\ChasingCheese\Cheese Game\Cheese Game\obj\Debug\Cheese Game.csprojResolveAssemblyReference.cache
