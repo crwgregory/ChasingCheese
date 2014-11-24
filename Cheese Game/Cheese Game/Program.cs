@@ -24,6 +24,7 @@ namespace Cheese_Game
         //call properties
         public int X { get; set; }
         public int Y { get; set; }
+        public bool JustUsed { get; set; }
         
 
         public PointStatus Status { get; set; }
@@ -49,7 +50,7 @@ namespace Cheese_Game
         //create constructor
         public CheeseFinder()
         {
-            this.GridSize = 15;
+            this.GridSize = 10;
             this.rng = new Random();
 
             this.ListOfCats = new List<Point>();
@@ -96,13 +97,21 @@ namespace Cheese_Game
         //methods
         public void DrawGrid()
         {
+            
             Console.Clear();
+            Console.Write(" ");
+            for (int i = 0; i < GridSize; i++)
+            {
+                Console.Write("  " +i + "  ");
+            }
             Console.WriteLine();
             for (int y = 0; y < GridSize; y++)
             {
+                Console.Write(y);
                 Console.Write( "|");
                 for (int x = 0; x < GridSize; x++)
                 {
+                    
                     Point newPoint = Grid[x, y];
                     if (Grid[x, y].Status == Point.PointStatus.Empty)
                     {
@@ -122,7 +131,7 @@ namespace Cheese_Game
                     }
                     else if (Grid[x, y].Status == Point.PointStatus.StuckCat)
                     {
-                        Console.Write("[ ! ]");
+                        Console.Write("[ "+Grid[x, y].CatLives+" ]");
                     }
                     else
                     {
@@ -200,10 +209,17 @@ namespace Cheese_Game
             }
             
         }
-        public void MoveCat()
+        public bool MoveCat()
         {
             
-            int chanceToMove = rng.Next(0, 10);
+            
+            Point CatJustUsed = new Point(1000, 1000);
+            //new round, set all cats status to not just used
+            foreach (Point cat in Grid)
+            {
+                cat.JustUsed = false;
+            }
+            //this is the stuck cat feature
             foreach (Point catInList in Grid)
             {
                 bool wasOnCheese = false;
@@ -216,12 +232,14 @@ namespace Cheese_Game
                         wasOnCheese = true;
                     }
                 }
-
-                if (catInList.Status == Point.PointStatus.Cat)
+                int chanceToMove = rng.Next(0, 10);
+                //make sure we are not looping over the same cat
+                if (catInList.Status == Point.PointStatus.Cat && !catInList.JustUsed)
                 {
-                    if (chanceToMove > 2)
+                    
+                    if (chanceToMove > 5)
                     {
-
+                        catInList.Status = Point.PointStatus.Empty;
                         
                         int catX = catInList.X;
                         int catY = catInList.Y;
@@ -273,10 +291,21 @@ namespace Cheese_Game
                             {
                                 CatTarget.X -= 1;
                                 break;
-                            } 
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                        if (!tryUp && !tryDown && !tryRight && !tryLeft)
+                        {
+                            Console.WriteLine("You got at!");
+                            Console.ReadKey();
+                            break;
                         }
 
-                        
+                        Grid[CatTarget.X, CatTarget.Y].JustUsed = true;
+
                         if (Grid[CatTarget.X, CatTarget.Y].Status == Point.PointStatus.Empty)
                         {
                             //means the spot going into is empty
@@ -287,29 +316,41 @@ namespace Cheese_Game
                             {
                                 Grid[catX, catY].Status = Point.PointStatus.Cheese;
                             }
-
                         }
                         else if (Grid[CatTarget.X, CatTarget.Y].Status == Point.PointStatus.Mouse)
                         {
-                            ListOfCats.Remove(catInList);
                             Grid[catX, catY].Status = Point.PointStatus.Empty;
+                            Grid[CatTarget.X, CatTarget.Y].Status = Point.PointStatus.Cat;
+                            return true;
                             //Grid[catX, catY].Status = Point.PointStatus.Empty;
                         }
                         else if (Grid[CatTarget.X, CatTarget.Y].Status == Point.PointStatus.Cheese)
                         {
                             Grid[catX, catY].Status = Point.PointStatus.Empty;
                             Grid[CatTarget.X, CatTarget.Y].Status = Point.PointStatus.StuckCat;
-                            Grid[CatTarget.X, CatTarget.Y].CatLives = 4;
+                            Grid[CatTarget.X, CatTarget.Y].CatLives = 9;
+                            if (wasOnCheese)
+                            {
+                                Grid[catX, catY].Status = Point.PointStatus.Cheese;
+                            }
                         }
                         else if (Grid[CatTarget.X, CatTarget.Y].Status == Point.PointStatus.Cat)
                         {
                             Grid[catX, catY].Status = Point.PointStatus.Cat;
+                            Grid[CatTarget.X, CatTarget.Y].JustUsed = false;
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("sup?");
+                            Console.ReadKey();
                         }
                         
                     } 
                 }
 
             }
+            return false;
 
         }
 
@@ -455,6 +496,11 @@ namespace Cheese_Game
                         }
                     }
                 }
+                if ( Grid[FutureMousePoint.X, FutureMousePoint.Y].Status == Point.PointStatus.Cat)
+                {
+                    Console.WriteLine("You ran into a cat you fool!");
+                    Console.ReadKey();
+                }
                 //if it is not the cheese
                 Grid[CurrentMousePoint.X, CurrentMousePoint.Y].Status = Point.PointStatus.Empty;
 
@@ -469,57 +515,86 @@ namespace Cheese_Game
             int numOfMoves = 0;
             int numOfCheesesFound = 0;
             int cheeseCounterToAddCat = 0;
+            bool gotAte = false;
+            bool wantsToPlayAgain = true;
             //bool testingCat = true;
-            while (!foundCheese)       //if the cheese has not been found
+            while (wantsToPlayAgain)
             {
-                if (numOfCheesesFound != 2)
+                while (!foundCheese)       //if the cheese has not been found
                 {
-                    this.MoveCat(); 
-                }
-                this.DrawGrid();
-                Console.WriteLine("Number of moves taken so far: " + numOfMoves + "\nYou have found " + numOfCheesesFound + " peices of cheese!");
-                int userMove = this.GetUserMove();
-                if (this.MoveMouse(this.ValidMove(userMove), userMove))
-                {
-                    numOfCheesesFound++;
-                    cheeseCounterToAddCat++;
-                }
-                numOfMoves++;
-                if (numOfMoves % 6 == 0)
-                {
-                    int CheeseX = rng.Next(0, GridSize);
-                    int CheeseY = rng.Next(0, GridSize);
 
-                    //and set an instants of cheese
-                    if (Grid[CheeseX, CheeseY].Status == Point.PointStatus.Empty)
+                    if (numOfCheesesFound != 2 && numOfMoves > 0)
                     {
-                        Grid[CheeseX, CheeseY].Status = Point.PointStatus.Cheese;
+                        if (this.MoveCat())
+                        {
+                            gotAte = true;
+                        }
+                    }
+                    this.DrawGrid();
+                    if (gotAte)
+                    {
+                        Console.WriteLine("You got ate homie!");
+                        break;
+                    }
+                    Console.WriteLine("Number of moves taken so far: " + numOfMoves + "\nYou have found " + numOfCheesesFound + " peices of cheese!");
+                    int userMove = this.GetUserMove();
+                    if (this.MoveMouse(this.ValidMove(userMove), userMove))
+                    {
+                        numOfCheesesFound++;
+                        cheeseCounterToAddCat++;
+                    }
+                    numOfMoves++;
+                    if (numOfMoves % 6 == 0)
+                    {
+                        int CheeseX = rng.Next(0, GridSize);
+                        int CheeseY = rng.Next(0, GridSize);
+
+                        //and set an instants of cheese
+                        if (Grid[CheeseX, CheeseY].Status == Point.PointStatus.Empty)
+                        {
+                            Grid[CheeseX, CheeseY].Status = Point.PointStatus.Cheese;
+                        }
+                    }
+
+                    if (cheeseCounterToAddCat == 2)
+                    {
+                        this.PlaceCat();
+
+                        cheeseCounterToAddCat = 0;
+                    }
+                    //found how many pieces of cheese are on the board if it is zero then the player will win
+                    int numOfCheeseOnBoard = 0;
+                    foreach (Point cheessy in Grid)
+                    {
+                        if (cheessy.Status == Point.PointStatus.Cheese)
+                        {
+                            numOfCheeseOnBoard++;
+                        }
+                    }
+                    if (numOfCheesesFound == 15)
+                    {
+                        foundCheese = true;
                     }
                 }
-                
-                if (cheeseCounterToAddCat == 2)
-                {
-                    this.PlaceCat();
 
-                    cheeseCounterToAddCat = 0;
-                }
-                //found how many pieces of cheese are on the board if it is zero then the player will win
-                int numOfCheeseOnBoard = 0;
-                foreach (Point cheessy in Grid)
+                //if you get here you win.
+                Console.Clear();
+                if (foundCheese)
                 {
-                    if (cheessy.Status == Point.PointStatus.Cheese)
-                    {
-                        numOfCheeseOnBoard++;
-                    }
+                    Console.WriteLine("\nCongrats you won homie. It only took you: " + numOfMoves + " moves to find that stinky cheese! \nI think its so stinky that you can do it faster!");
                 }
-                if (numOfCheeseOnBoard == 0)
+                Console.ReadKey();
+                Console.WriteLine("Want to play again? Press 1.");
+                string input = Console.ReadLine();
+                if (input == "1")
                 {
-                    foundCheese = true;
+                    this.PlayGame();
+                }
+                else
+                {
+                    wantsToPlayAgain = false;
                 }
             }
-            //if you get here you win.
-            Console.Clear();
-            Console.WriteLine("\nCongrats you won homie. It only took you: " + numOfMoves + " moves to find that stinky cheese! \nI think its so stinky that you can do it faster!");
         }
 
     }
